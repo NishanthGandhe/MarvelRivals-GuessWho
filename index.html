@@ -235,6 +235,28 @@
         </div>
     </div>
 
+    <!-- Player Join Notification -->
+    <div id="join-notification" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+        <div class="bg-gradient-to-br from-red-900 via-blue-900 to-yellow-900 border-4 border-yellow-400 rounded-xl p-8 shadow-2xl text-center max-w-md mx-auto animate-pulse">
+            <div class="mb-4">
+                <div class="text-6xl mb-2">⚡</div>
+                <h3 class="text-3xl font-bangers text-yellow-400 tracking-wider mb-2">PLAYERS CONNECTED!</h3>
+            </div>
+            <p class="text-xl font-marvel text-white mb-4">Both heroes have assembled!</p>
+            <p class="text-lg font-bold text-green-400 mb-4">Game starting in <span id="countdown">3</span>...</p>
+            <div class="flex justify-center space-x-4 text-sm">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+                    <span class="text-yellow-400">Player 1</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-red-400 rounded-full mr-2"></div>
+                    <span class="text-red-400">Player 2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         
         // --- FIREBASE IMPORTS ---
@@ -311,6 +333,7 @@
         let gameId = null;
         let playerNumber = null;
         let gameUnsubscribe = null;
+        let hasShownJoinNotification = false;
         let localGameState = {};
         let currentView = 'role'; // 'role' or 'alpha'
 
@@ -325,6 +348,8 @@
         const modalButtons = document.getElementById('modal-buttons');
         const playerBoard = document.getElementById('player-board');
         const toggleViewBtn = document.getElementById('toggleViewBtn');
+        const joinNotification = document.getElementById('join-notification');
+        const countdownElement = document.getElementById('countdown');
         const roleView = document.getElementById('role-view');
         const alphaView = document.getElementById('alpha-view');
 
@@ -413,6 +438,7 @@
         function setupGameSession(newGameId, pNum) {
             gameId = newGameId;
             playerNumber = pNum;
+            hasShownJoinNotification = false; // Reset notification flag for new game
 
             startScreen.classList.add('hidden');
             gameContainer.classList.remove('hidden');
@@ -433,7 +459,16 @@
                 return;
             }
             const oldGameState = localGameState.gameState;
+            const oldLocalGameState = localGameState;
             localGameState = doc.data();
+            
+            // Check if both players just connected
+            const bothPlayersConnected = localGameState.player1.id && localGameState.player2.id;
+            const wasWaitingForPlayer2 = !oldLocalGameState.player2?.id || !oldLocalGameState.player1?.id;
+            
+            if (bothPlayersConnected && wasWaitingForPlayer2) {
+                showJoinNotification();
+            }
             
             const vanguardGrid = document.getElementById('vanguard-grid');
             if (vanguardGrid.children.length === 0 && localGameState.characters) {
@@ -737,6 +772,31 @@
             okButton.className = 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-8 rounded-lg';
             okButton.onclick = () => modal.classList.add('hidden');
             modalButtons.appendChild(okButton);
+        }
+
+        function showJoinNotification() {
+            if (hasShownJoinNotification) return;
+            hasShownJoinNotification = true;
+
+            joinNotification.classList.remove('hidden');
+            
+            let countdown = 3;
+            countdownElement.textContent = countdown;
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownElement.textContent = countdown;
+                } else {
+                    clearInterval(countdownInterval);
+                    joinNotification.classList.add('hidden');
+                }
+            }, 1000);
+
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                joinNotification.classList.add('hidden');
+            }, 3000);
         }
 
         function showEndGameModal() {
