@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marvel Rivals - Guess Who?</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
@@ -53,7 +54,7 @@
             background-color: #1f2937; padding: 2rem; border-radius: 0.75rem;
             text-align: center; border: 1px solid #4b5563; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        #game-container.hidden, #start-screen.hidden, .modal-backdrop.hidden { display: none; }
+        #game-container.hidden, #start-screen.hidden, .modal-backdrop.hidden, .view-container.hidden { display: none; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -83,19 +84,30 @@
             <div id="gameStatus" class="text-center text-3xl font-bangers tracking-wide mb-6 h-10"></div>
             
             <div id="player-board" class="player-board bg-gray-800 p-6 rounded-xl shadow-2xl border-4 border-transparent transition-colors duration-500">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="board-title" class="text-3xl font-bold">Your Board</h2>
+                    <button id="toggleViewBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Toggle View</button>
+                </div>
                 
-                <!-- Character Grids by Role -->
-                <div>
-                    <h3 class="text-2xl font-bangers text-yellow-400 tracking-wider mb-2">Vanguards</h3>
-                    <div id="vanguard-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                <!-- Role View Container -->
+                <div id="role-view" class="view-container">
+                    <div>
+                        <h3 class="text-2xl font-bangers text-yellow-400 tracking-wider mb-2">Vanguards</h3>
+                        <div id="vanguard-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-2xl font-bangers text-red-400 tracking-wider mb-2">Duelists</h3>
+                        <div id="duelist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                    </div>
+                    <div class="mt-6">
+                        <h3 class="text-2xl font-bangers text-sky-400 tracking-wider mb-2">Strategists</h3>
+                        <div id="strategist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                    </div>
                 </div>
-                <div class="mt-6">
-                    <h3 class="text-2xl font-bangers text-red-400 tracking-wider mb-2">Duelists</h3>
-                    <div id="duelist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
-                </div>
-                <div class="mt-6">
-                    <h3 class="text-2xl font-bangers text-sky-400 tracking-wider mb-2">Strategists</h3>
-                    <div id="strategist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+
+                <!-- Alphabetical View Container -->
+                <div id="alpha-view" class="view-container hidden">
+                    <div id="alpha-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t-2 border-gray-700">
@@ -124,9 +136,7 @@
         <div class="modal-content w-11/12 max-w-md">
             <h3 id="modal-title" class="text-2xl font-bold mb-4">Notification</h3>
             <p id="modal-text" class="mb-6">This is a message.</p>
-            <div id="modal-buttons" class="flex justify-center gap-4">
-                <button id="modal-ok" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-8 rounded-lg">OK</button>
-            </div>
+            <div id="modal-buttons" class="flex justify-center gap-4"></div>
         </div>
     </div>
 
@@ -139,12 +149,10 @@
 
         // --- CHARACTER DATA ---
         const characters = [
-            // Vanguards
             { name: 'Captain America', role: 'Vanguard' }, { name: 'Doctor Strange', role: 'Vanguard' }, { name: 'Emma Frost', role: 'Vanguard' },
             { name: 'Groot', role: 'Vanguard' }, { name: 'Hulk', role: 'Vanguard' }, { name: 'Magneto', role: 'Vanguard' },
             { name: 'Peni Parker', role: 'Vanguard' }, { name: 'The Thing', role: 'Vanguard' }, { name: 'Thor', role: 'Vanguard' },
             { name: 'Venom', role: 'Vanguard' },
-            // Duelists
             { name: 'Black Panther', role: 'Duelist' }, { name: 'Black Widow', role: 'Duelist' }, { name: 'Hawkeye', role: 'Duelist' },
             { name: 'Hela', role: 'Duelist' }, { name: 'Human Torch', role: 'Duelist' }, { name: 'Iron Fist', role: 'Duelist' },
             { name: 'Iron Man', role: 'Duelist' }, { name: 'Magik', role: 'Duelist' }, { name: 'Mister Fantastic', role: 'Duelist' },
@@ -152,18 +160,18 @@
             { name: 'Psylocke', role: 'Duelist' }, { name: 'The Punisher', role: 'Duelist' }, { name: 'Scarlet Witch', role: 'Duelist' },
             { name: 'Squirrel Girl', role: 'Duelist' }, { name: 'Spider-Man', role: 'Duelist' }, { name: 'Star-Lord', role: 'Duelist' },
             { name: 'Storm', role: 'Duelist' }, { name: 'Winter Soldier', role: 'Duelist' }, { name: 'Wolverine', role: 'Duelist' },
-            // Strategists
             { name: 'Adam Warlock', role: 'Strategist' }, { name: 'Cloak and Dagger', role: 'Strategist' }, { name: 'Invisible Woman', role: 'Strategist' },
             { name: 'Jeff the Land Shark', role: 'Strategist' }, { name: 'Loki', role: 'Strategist' }, { name: 'Luna Snow', role: 'Strategist' },
             { name: 'Mantis', role: 'Strategist' }, { name: 'Rocket Raccoon', role: 'Strategist' }, { name: 'Ultron', role: 'Strategist' }
         ];
 
-        // --- FIREBASE & GAME STATE ---
+        // --- GAME STATE & CONSTANTS ---
         let app, auth, db;
         let gameId = null;
         let playerNumber = null;
         let gameUnsubscribe = null;
         let localGameState = {};
+        let currentView = 'role'; // 'role' or 'alpha'
 
         // --- DOM ELEMENTS ---
         const startScreen = document.getElementById('start-screen');
@@ -175,6 +183,13 @@
         const modalText = document.getElementById('modal-text');
         const modalButtons = document.getElementById('modal-buttons');
         const playerBoard = document.getElementById('player-board');
+        const toggleViewBtn = document.getElementById('toggleViewBtn');
+        const roleView = document.getElementById('role-view');
+        const alphaView = document.getElementById('alpha-view');
+
+        // --- SOUND EFFECTS ---
+        const winSound = new Tone.Synth({ oscillator: { type: "sine" } }).toDestination();
+        const loseSound = new Tone.Synth({ oscillator: { type: "triangle" } }).toDestination();
 
         // --- INITIALIZATION ---
         async function initialize() {
@@ -202,6 +217,7 @@
             document.getElementById('createGameBtn').onclick = createNewGame;
             document.getElementById('joinGameBtn').onclick = joinGame;
             document.getElementById('gameIdDisplay').onclick = copyGameId;
+            toggleViewBtn.onclick = toggleCharacterView;
         }
 
         // --- GAME FLOW ---
@@ -285,6 +301,7 @@
                 showModal("Game Error", "The game session has ended or could not be found.", true);
                 return;
             }
+            const oldGameState = localGameState.gameState;
             localGameState = doc.data();
             
             const vanguardGrid = document.getElementById('vanguard-grid');
@@ -294,6 +311,11 @@
             }
 
             updateUIFromState();
+
+            // Trigger end game modal only when state changes to 'gameover'
+            if (oldGameState !== 'gameover' && localGameState.gameState === 'gameover') {
+                showEndGameModal();
+            }
         }
 
         // --- UI UPDATES ---
@@ -318,14 +340,10 @@
                 gameStatus.className = `text-center text-3xl font-bangers tracking-wide mb-6 h-10 ${currentPlayer === 1 ? 'text-yellow-400' : 'text-red-400'}`;
                 document.getElementById('guess-area').classList.remove('hidden');
             } else if (gameState === 'gameover') {
-                instructions.textContent = "Game Over! Return to the start screen to play again.";
+                instructions.textContent = "Game Over! Click the button below to play again.";
                 gameStatus.textContent = `Player ${winner} wins!`;
                 gameStatus.className = 'text-center text-4xl font-bangers tracking-wider mb-6 h-10 text-green-400';
                 document.getElementById('guess-area').classList.add('hidden');
-                
-                const opponentCharName = playerNumber === 1 ? player2.mysteryCharacter : player1.mysteryCharacter;
-                const opponentChar = characters.find(c => c.name === opponentCharName);
-                if(opponentChar) displayMysteryCard('opponent-mystery-card', opponentChar);
             }
 
             const myCharName = playerNumber === 1 ? player1.mysteryCharacter : player2.mysteryCharacter;
@@ -339,21 +357,26 @@
             const vanguardGrid = document.getElementById('vanguard-grid');
             const duelistGrid = document.getElementById('duelist-grid');
             const strategistGrid = document.getElementById('strategist-grid');
+            const alphaGrid = document.getElementById('alpha-grid');
 
             vanguardGrid.innerHTML = '';
             duelistGrid.innerHTML = '';
             strategistGrid.innerHTML = '';
+            alphaGrid.innerHTML = '';
 
+            // Populate role-based grids
             charList.forEach(char => {
-                if (!char) return; // Safeguard for any missing characters
+                if (!char) return;
                 const card = createCharacterCard(char);
-                if (char.role === 'Vanguard') {
-                    vanguardGrid.appendChild(card);
-                } else if (char.role === 'Duelist') {
-                    duelistGrid.appendChild(card);
-                } else if (char.role === 'Strategist') {
-                    strategistGrid.appendChild(card);
-                }
+                if (char.role === 'Vanguard') vanguardGrid.appendChild(card);
+                else if (char.role === 'Duelist') duelistGrid.appendChild(card);
+                else if (char.role === 'Strategist') strategistGrid.appendChild(card);
+            });
+
+            // Populate alphabetical grid
+            [...charList].sort((a, b) => a.name.localeCompare(b.name)).forEach(char => {
+                 if (!char) return;
+                 alphaGrid.appendChild(createCharacterCard(char));
             });
         }
 
@@ -379,18 +402,31 @@
             `;
         }
 
-        // --- PLAYER ACTIONS ---
+        // --- PLAYER ACTIONS & UI ---
+        function toggleCharacterView() {
+            if (currentView === 'role') {
+                currentView = 'alpha';
+                roleView.classList.add('hidden');
+                alphaView.classList.remove('hidden');
+            } else {
+                currentView = 'role';
+                roleView.classList.remove('hidden');
+                alphaView.classList.add('hidden');
+            }
+        }
+
         function handleCardClick(character, cardElement) {
-            const { gameState, player1, player2 } = localGameState;
-            if (gameState === 'selection') {
-                const myCharacter = playerNumber === 1 ? player1.mysteryCharacter : player2.mysteryCharacter;
+            if (localGameState.gameState === 'selection') {
+                const myCharacter = playerNumber === 1 ? localGameState.player1.mysteryCharacter : localGameState.player2.mysteryCharacter;
                 if (myCharacter) {
                     showModal("Already Chosen", "You have already selected your character.");
                     return;
                 }
                 showConfirmationModal(character);
-            } else if (gameState === 'gameplay') {
-                cardElement.classList.toggle('flipped');
+            } else if (localGameState.gameState === 'gameplay') {
+                // Flip all cards with the same name in both views
+                const allCards = document.querySelectorAll(`.character-card[data-char-name="${character.name}"]`);
+                allCards.forEach(card => card.classList.toggle('flipped'));
             }
         }
 
@@ -456,7 +492,7 @@
             });
         }
 
-        function showModal(title, text, isError = false) {
+        function showModal(title, text) {
             modal.classList.remove('hidden');
             modalTitle.textContent = title;
             modalText.textContent = text;
@@ -465,20 +501,45 @@
             const okButton = document.createElement('button');
             okButton.textContent = 'OK';
             okButton.className = 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-8 rounded-lg';
-            okButton.onclick = () => {
-                modal.classList.add('hidden');
-                if (isError) {
-                    gameContainer.classList.add('hidden');
-                    startScreen.classList.remove('hidden');
-                    if(gameUnsubscribe) gameUnsubscribe();
-                }
-            };
+            okButton.onclick = () => modal.classList.add('hidden');
             modalButtons.appendChild(okButton);
+        }
+
+        function showEndGameModal() {
+            const { winner, player1, player2 } = localGameState;
+            const playerWon = winner === playerNumber;
+            const now = Tone.now();
+
+            if (playerWon) {
+                modalTitle.textContent = "You Win!";
+                modalTitle.className = "text-4xl font-bangers text-green-400";
+                winSound.triggerAttackRelease("C4", "8n", now);
+                winSound.triggerAttackRelease("E4", "8n", now + 0.2);
+                winSound.triggerAttackRelease("G4", "8n", now + 0.4);
+            } else {
+                modalTitle.textContent = "You Lose!";
+                modalTitle.className = "text-4xl font-bangers text-red-500";
+                loseSound.triggerAttackRelease("G3", "4n", now);
+                loseSound.triggerAttackRelease("C3", "2n", now + 0.2);
+            }
+
+            const opponentCharName = playerNumber === 1 ? player2.mysteryCharacter : player1.mysteryCharacter;
+            modalText.textContent = `Your opponent's character was ${opponentCharName}.`;
+            modalButtons.innerHTML = '';
+
+            const playAgainButton = document.createElement('button');
+            playAgainButton.textContent = 'Play Again';
+            playAgainButton.className = 'bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-8 rounded-lg';
+            playAgainButton.onclick = () => window.location.reload();
+            
+            modalButtons.appendChild(playAgainButton);
+            modal.classList.remove('hidden');
         }
 
         function showConfirmationModal(character) {
             modal.classList.remove('hidden');
             modalTitle.textContent = "Confirm Selection";
+            modalTitle.className = "text-2xl font-bold mb-4";
             modalText.textContent = `Do you want to choose ${character.name}?`;
             modalButtons.innerHTML = '';
             
