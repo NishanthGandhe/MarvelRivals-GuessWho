@@ -225,19 +225,33 @@
             }
 
             const gameData = gameDoc.data();
-            if (gameData.player2.id && gameData.player2.id !== auth.currentUser.uid) {
+            const myUid = auth.currentUser.uid;
+
+            // Check if the current user is Player 1
+            if (gameData.player1.id === myUid) {
+                // If player 2 slot is empty, it means P1 is trying to join their own game from another tab/browser with a shared session.
+                if (!gameData.player2.id) {
+                    showModal(
+                        "You are Player 1", 
+                        "You have already created this game. To play, ask a friend to join this game ID from their own device or a different browser profile (like an Incognito window)."
+                    );
+                }
+                // In any case, set them up as Player 1.
+                await setupGameSession(gameIdToJoin, 1);
+                return;
+            }
+
+            // Check if the game is full with a different player
+            if (gameData.player2.id && gameData.player2.id !== myUid) {
                 showModal("Game Full", "This game already has two players.");
                 return;
             }
 
-            if (gameData.player1.id !== auth.currentUser.uid) {
-                await updateDoc(gameRef, { 'player2.id': auth.currentUser.uid });
-                await setupGameSession(gameIdToJoin, 2);
-            } else {
-                // Player 1 is rejoining
-                await setupGameSession(gameIdToJoin, 1);
-            }
+            // If we reach here, the user is joining as Player 2 (or rejoining as P2)
+            await updateDoc(gameRef, { 'player2.id': myUid });
+            await setupGameSession(gameIdToJoin, 2);
         }
+
 
         function setupGameSession(newGameId, pNum) {
             gameId = newGameId;
