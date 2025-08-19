@@ -5,57 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marvel Rivals - Guess Who?</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #1a202c;
+            font-family: 'Oswald', sans-serif;
+            background-color: #111827;
             color: #e2e8f0;
+            font-weight: 400;
+        }
+        .font-bangers {
+            font-family: 'Bangers', cursive;
         }
         .character-card {
-            transition: transform 0.3s, filter 0.3s, opacity 0.3s, box-shadow 0.3s;
+            transition: transform 0.3s, filter 0.3s, opacity 0.3s, border-color 0.3s;
             cursor: pointer;
+            border: 2px solid #4b5563;
         }
         .character-card:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+            border-color: #facc15;
         }
         .character-card.flipped {
             transform: scale(0.9);
             filter: grayscale(100%);
-            opacity: 0.5;
+            opacity: 0.4;
         }
-        .mystery-card { border: 2px dashed #4a5568; }
-        .neon-text {
-            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ea5e9, 0 0 30px #0ea5e9, 0 0 40px #0ea5e9;
+        .mystery-card { border: 2px dashed #4b5563; }
+        .comic-title {
+            color: #fef2f2;
+            -webkit-text-stroke: 2px #ef4444;
+            text-shadow: 4px 4px 0 #000;
+        }
+        .player-board.active {
+            border-color: #facc15; /* Yellow-400 */
+        }
+        .player-board.active-p2 {
+             border-color: #f87171; /* Red-400 */
         }
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.7); display: flex;
+            background-color: rgba(0,0,0,0.8); display: flex;
             justify-content: center; align-items: center; z-index: 100;
         }
         .modal-content {
-            background-color: #2d3748; padding: 2rem; border-radius: 0.75rem;
-            text-align: center; border: 1px solid #4a5568; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background-color: #1f2937; padding: 2rem; border-radius: 0.75rem;
+            text-align: center; border: 1px solid #4b5563; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
         #game-container.hidden, #start-screen.hidden, .modal-backdrop.hidden { display: none; }
     </style>
 </head>
 <body class="p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         <div class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold neon-text">Marvel Rivals: Guess Who?</h1>
-            <p id="instructions" class="text-gray-400 mt-2">Create or join a game to start playing!</p>
+            <h1 class="text-6xl md:text-7xl font-bangers tracking-wider comic-title">Marvel Rivals: Guess Who?</h1>
+            <p id="instructions" class="text-gray-400 mt-2 text-lg">Create or join a game to start playing!</p>
         </div>
 
         <!-- Start Screen -->
-        <div id="start-screen" class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700 text-center">
-            <button id="createGameBtn" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-8 text-lg rounded-lg shadow-lg transition-transform transform hover:scale-105">Create New Game</button>
+        <div id="start-screen" class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700 text-center max-w-lg mx-auto">
+            <button id="createGameBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 text-lg rounded-lg shadow-lg transition-transform transform hover:scale-105">Create New Game</button>
             <div class="my-6 text-gray-400">OR</div>
             <div>
-                <input type="text" id="gameIdInput" placeholder="Enter Game ID to Join" class="w-full max-w-xs bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500">
-                <button id="joinGameBtn" class="ml-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">Join Game</button>
+                <input type="text" id="gameIdInput" placeholder="Enter Game ID to Join" class="w-full max-w-xs bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                <button id="joinGameBtn" class="ml-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">Join Game</button>
             </div>
         </div>
 
@@ -65,12 +80,25 @@
                 <p class="text-gray-400">Game ID: <strong id="gameIdDisplay" class="text-yellow-400 cursor-pointer" title="Click to copy"></strong></p>
                 <p id="player-identity" class="font-bold text-xl"></p>
             </div>
-            <div id="gameStatus" class="text-center text-2xl font-semibold mb-6 h-8"></div>
+            <div id="gameStatus" class="text-center text-3xl font-bangers tracking-wide mb-6 h-10"></div>
             
-            <div class="player-board bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700">
-                <h2 id="board-title" class="text-3xl font-bold text-center mb-4">Your Board</h2>
-                <div id="player-grid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4"></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div id="player-board" class="player-board bg-gray-800 p-6 rounded-xl shadow-2xl border-4 border-transparent transition-colors duration-500">
+                
+                <!-- Character Grids by Role -->
+                <div>
+                    <h3 class="text-2xl font-bangers text-yellow-400 tracking-wider mb-2">Vanguards</h3>
+                    <div id="vanguard-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-2xl font-bangers text-red-400 tracking-wider mb-2">Duelists</h3>
+                    <div id="duelist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-2xl font-bangers text-sky-400 tracking-wider mb-2">Strategists</h3>
+                    <div id="strategist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t-2 border-gray-700">
                     <div>
                         <h3 class="text-xl font-semibold text-center">Your Mystery Character</h3>
                         <div id="player-mystery-card" class="mystery-card bg-gray-900 rounded-lg p-4 mt-2 flex items-center justify-center h-28"></div>
@@ -84,8 +112,8 @@
                 </div>
                 <div id="guess-area" class="mt-6 text-center hidden">
                     <h3 class="text-xl font-semibold">Guess Opponent's Character:</h3>
-                    <input type="text" id="guess-input" placeholder="Type name..." class="mt-2 w-full max-w-xs bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
-                    <button id="guess-btn" class="ml-2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105">Guess</button>
+                    <input type="text" id="guess-input" placeholder="Type name..." class="mt-2 w-full max-w-xs bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+                    <button id="guess-btn" class="ml-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105">Guess</button>
                 </div>
             </div>
         </div>
@@ -97,7 +125,7 @@
             <h3 id="modal-title" class="text-2xl font-bold mb-4">Notification</h3>
             <p id="modal-text" class="mb-6">This is a message.</p>
             <div id="modal-buttons" class="flex justify-center gap-4">
-                <button id="modal-ok" class="bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-8 rounded-lg">OK</button>
+                <button id="modal-ok" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-8 rounded-lg">OK</button>
             </div>
         </div>
     </div>
@@ -111,50 +139,42 @@
 
         // --- CHARACTER DATA ---
         const characters = [
-            { name: 'Hulk', role: 'Vanguard', gender: 'Male', isHuman: true, wearsMask: false, hasWeapon: false, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Doctor Strange', role: 'Vanguard', gender: 'Male', isHuman: true, wearsMask: false, hasWeapon: false, isCosmic: true, isMutant: false, fromEarth: true },
-            { name: 'Magneto', role: 'Vanguard', gender: 'Male', isHuman: false, wearsMask: true, hasWeapon: false, isCosmic: false, isMutant: true, fromEarth: true },
-            { name: 'Black Panther', role: 'Duelist', gender: 'Male', isHuman: true, wearsMask: true, hasWeapon: false, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Hela', role: 'Duelist', gender: 'Female', isHuman: false, wearsMask: true, hasWeapon: true, isCosmic: true, isMutant: false, fromEarth: false },
-            { name: 'Iron Man', role: 'Duelist', gender: 'Male', isHuman: true, wearsMask: true, hasWeapon: false, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Luna Snow', role: 'Strategist', gender: 'Female', isHuman: true, wearsMask: false, hasWeapon: false, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Magik', role: 'Duelist', gender: 'Female', isHuman: false, wearsMask: false, hasWeapon: true, isCosmic: false, isMutant: true, fromEarth: true },
-            { name: 'Mantis', role: 'Strategist', gender: 'Female', isHuman: false, wearsMask: false, hasWeapon: false, isCosmic: true, isMutant: false, fromEarth: false },
-            { name: 'Loki', role: 'Strategist', gender: 'Male', isHuman: false, wearsMask: true, hasWeapon: true, isCosmic: true, isMutant: false, fromEarth: false },
-            { name: 'Namor', role: 'Duelist', gender: 'Male', isHuman: false, wearsMask: false, hasWeapon: true, isCosmic: false, isMutant: true, fromEarth: true },
-            { name: 'Captain America', role: 'Vanguard', gender: 'Male', isHuman: true, wearsMask: true, hasWeapon: true, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Rocket Raccoon', role: 'Strategist', gender: 'Male', isHuman: false, wearsMask: false, hasWeapon: true, isCosmic: true, isMutant: false, fromEarth: false },
-            { name: 'Spider-Man', role: 'Duelist', gender: 'Male', isHuman: true, wearsMask: true, hasWeapon: false, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Hawkeye', role: 'Duelist', gender: 'Male', isHuman: true, wearsMask: false, hasWeapon: true, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Peni Parker', role: 'Vanguard', gender: 'Female', isHuman: true, wearsMask: false, hasWeapon: false, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Moon Knight', role: 'Duelist', gender: 'Male', isHuman: true, wearsMask: true, hasWeapon: true, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Scarlet Witch', role: 'Duelist', gender: 'Female', isHuman: false, wearsMask: false, hasWeapon: false, isCosmic: false, isMutant: true, fromEarth: true },
-            { name: 'Adam Warlock', role: 'Strategist', gender: 'Male', isHuman: false, wearsMask: false, hasWeapon: false, isCosmic: true, isMutant: false, fromEarth: false },
-            { name: 'Iron Fist', role: 'Duelist', gender: 'Male', isHuman: true, wearsMask: false, hasWeapon: false, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'The Punisher', role: 'Duelist', gender: 'Male', isHuman: true, wearsMask: false, hasWeapon: true, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Storm', role: 'Duelist', gender: 'Female', isHuman: false, wearsMask: false, hasWeapon: false, isCosmic: false, isMutant: true, fromEarth: true },
-            { name: 'Venom', role: 'Vanguard', gender: 'Male', isHuman: false, wearsMask: true, hasWeapon: false, isCosmic: true, isMutant: false, fromEarth: false },
-            { name: 'Winter Soldier', role: 'Duelist', gender: 'Male', isHuman: true, wearsMask: true, hasWeapon: true, isCosmic: false, isMutant: false, fromEarth: true },
-            { name: 'Wolverine', role: 'Duelist', gender: 'Male', isHuman: false, wearsMask: true, hasWeapon: false, isCosmic: false, isMutant: true, fromEarth: true }
+            // Vanguards
+            { name: 'Captain America', role: 'Vanguard' }, { name: 'Doctor Strange', role: 'Vanguard' }, { name: 'Emma Frost', role: 'Vanguard' },
+            { name: 'Groot', role: 'Vanguard' }, { name: 'Hulk', role: 'Vanguard' }, { name: 'Magneto', role: 'Vanguard' },
+            { name: 'Peni Parker', role: 'Vanguard' }, { name: 'The Thing', role: 'Vanguard' }, { name: 'Thor', role: 'Vanguard' },
+            { name: 'Venom', role: 'Vanguard' },
+            // Duelists
+            { name: 'Black Panther', role: 'Duelist' }, { name: 'Black Widow', role: 'Duelist' }, { name: 'Hawkeye', role: 'Duelist' },
+            { name: 'Hela', role: 'Duelist' }, { name: 'Human Torch', role: 'Duelist' }, { name: 'Iron Fist', role: 'Duelist' },
+            { name: 'Iron Man', role: 'Duelist' }, { name: 'Magik', role: 'Duelist' }, { name: 'Mister Fantastic', role: 'Duelist' },
+            { name: 'Moon Knight', role: 'Duelist' }, { name: 'Namor', role: 'Duelist' }, { name: 'Phoenix', role: 'Duelist' },
+            { name: 'Psylocke', role: 'Duelist' }, { name: 'The Punisher', role: 'Duelist' }, { name: 'Scarlet Witch', role: 'Duelist' },
+            { name: 'Squirrel Girl', role: 'Duelist' }, { name: 'Spider-Man', role: 'Duelist' }, { name: 'Star-Lord', role: 'Duelist' },
+            { name: 'Storm', role: 'Duelist' }, { name: 'Winter Soldier', role: 'Duelist' }, { name: 'Wolverine', role: 'Duelist' },
+            // Strategists
+            { name: 'Adam Warlock', role: 'Strategist' }, { name: 'Cloak and Dagger', role: 'Strategist' }, { name: 'Invisible Woman', role: 'Strategist' },
+            { name: 'Jeff the Land Shark', role: 'Strategist' }, { name: 'Loki', role: 'Strategist' }, { name: 'Luna Snow', role: 'Strategist' },
+            { name: 'Mantis', role: 'Strategist' }, { name: 'Rocket Raccoon', role: 'Strategist' }, { name: 'Ultron', role: 'Strategist' }
         ];
 
         // --- FIREBASE & GAME STATE ---
         let app, auth, db;
         let gameId = null;
         let playerNumber = null;
-        let gameUnsubscribe = null; // To detach the Firestore listener
+        let gameUnsubscribe = null;
         let localGameState = {};
 
         // --- DOM ELEMENTS ---
         const startScreen = document.getElementById('start-screen');
         const gameContainer = document.getElementById('game-container');
-        const playerGrid = document.getElementById('player-grid');
         const gameStatus = document.getElementById('gameStatus');
         const instructions = document.getElementById('instructions');
         const modal = document.getElementById('modal');
         const modalTitle = document.getElementById('modal-title');
         const modalText = document.getElementById('modal-text');
         const modalButtons = document.getElementById('modal-buttons');
+        const playerBoard = document.getElementById('player-board');
 
         // --- INITIALIZATION ---
         async function initialize() {
@@ -168,7 +188,6 @@
                 measurementId: "G-V00GNPDWPJ"
             };
 
-            // Initialize Firebase
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
@@ -192,12 +211,12 @@
             const shuffledCharacters = [...characters].sort(() => 0.5 - Math.random());
 
             const initialGameState = {
-                gameState: 'selection', // 'selection', 'gameplay', 'gameover'
+                gameState: 'selection',
                 currentPlayer: 1,
                 player1: { id: auth.currentUser.uid, mysteryCharacter: null },
                 player2: { id: null, mysteryCharacter: null },
                 winner: null,
-                characters: shuffledCharacters.map(c => c.name) // Store the shuffled order
+                characters: shuffledCharacters.map(c => c.name)
             };
 
             try {
@@ -227,31 +246,22 @@
             const gameData = gameDoc.data();
             const myUid = auth.currentUser.uid;
 
-            // Check if the current user is Player 1
             if (gameData.player1.id === myUid) {
-                // If player 2 slot is empty, it means P1 is trying to join their own game from another tab/browser with a shared session.
                 if (!gameData.player2.id) {
-                    showModal(
-                        "You are Player 1", 
-                        "You have already created this game. To play, ask a friend to join this game ID from their own device or a different browser profile (like an Incognito window)."
-                    );
+                    showModal("You are Player 1", "You have already created this game. To play, ask a friend to join this game ID from their own device or a different browser profile (like an Incognito window).");
                 }
-                // In any case, set them up as Player 1.
                 await setupGameSession(gameIdToJoin, 1);
                 return;
             }
 
-            // Check if the game is full with a different player
             if (gameData.player2.id && gameData.player2.id !== myUid) {
                 showModal("Game Full", "This game already has two players.");
                 return;
             }
 
-            // If we reach here, the user is joining as Player 2 (or rejoining as P2)
             await updateDoc(gameRef, { 'player2.id': myUid });
             await setupGameSession(gameIdToJoin, 2);
         }
-
 
         function setupGameSession(newGameId, pNum) {
             gameId = newGameId;
@@ -263,9 +273,9 @@
 
             const playerIdentity = document.getElementById('player-identity');
             playerIdentity.textContent = `You are Player ${playerNumber}`;
-            playerIdentity.className = `font-bold text-xl ${playerNumber === 1 ? 'text-sky-400' : 'text-red-400'}`;
+            playerIdentity.className = `font-bold text-xl ${playerNumber === 1 ? 'text-yellow-400' : 'text-red-400'}`;
 
-            if (gameUnsubscribe) gameUnsubscribe(); // Unsubscribe from any previous listener
+            if (gameUnsubscribe) gameUnsubscribe();
             gameUnsubscribe = onSnapshot(getGameRef(gameId), handleGameStateUpdate);
         }
 
@@ -277,10 +287,10 @@
             }
             localGameState = doc.data();
             
-            // Populate board on first load
-            if (playerGrid.children.length === 0) {
+            const vanguardGrid = document.getElementById('vanguard-grid');
+            if (vanguardGrid.children.length === 0 && localGameState.characters) {
                  const characterList = localGameState.characters.map(name => characters.find(c => c.name === name));
-                 populateGrid(playerGrid, characterList);
+                 populateAllGrids(characterList);
             }
 
             updateUIFromState();
@@ -290,7 +300,11 @@
         function updateUIFromState() {
             const { gameState, currentPlayer, winner, player1, player2 } = localGameState;
             
-            // Update status text
+            playerBoard.classList.remove('active', 'active-p2');
+            if (gameState === 'gameplay' && currentPlayer === playerNumber) {
+                 playerBoard.classList.add(playerNumber === 1 ? 'active' : 'active-p2');
+            }
+            
             if (gameState === 'selection') {
                 if ((playerNumber === 1 && !player1.mysteryCharacter) || (playerNumber === 2 && !player2.mysteryCharacter)) {
                     instructions.textContent = "Please choose your secret character from the board below.";
@@ -301,21 +315,19 @@
             } else if (gameState === 'gameplay') {
                 instructions.textContent = "Ask yes/no questions to guess your opponent's mystery character.";
                 gameStatus.textContent = `Player ${currentPlayer}'s Turn`;
-                gameStatus.className = `text-center text-2xl font-semibold mb-6 h-8 ${currentPlayer === 1 ? 'text-sky-400' : 'text-red-400'}`;
+                gameStatus.className = `text-center text-3xl font-bangers tracking-wide mb-6 h-10 ${currentPlayer === 1 ? 'text-yellow-400' : 'text-red-400'}`;
                 document.getElementById('guess-area').classList.remove('hidden');
             } else if (gameState === 'gameover') {
-                instructions.textContent = "Game Over! Click the Game ID to copy it and start a new game.";
+                instructions.textContent = "Game Over! Return to the start screen to play again.";
                 gameStatus.textContent = `Player ${winner} wins!`;
-                gameStatus.className = 'text-center text-3xl font-bold mb-6 h-8 text-green-400 neon-text';
+                gameStatus.className = 'text-center text-4xl font-bangers tracking-wider mb-6 h-10 text-green-400';
                 document.getElementById('guess-area').classList.add('hidden');
                 
-                // Reveal opponent's card
                 const opponentCharName = playerNumber === 1 ? player2.mysteryCharacter : player1.mysteryCharacter;
                 const opponentChar = characters.find(c => c.name === opponentCharName);
                 if(opponentChar) displayMysteryCard('opponent-mystery-card', opponentChar);
             }
 
-            // Display your chosen character
             const myCharName = playerNumber === 1 ? player1.mysteryCharacter : player2.mysteryCharacter;
             if (myCharName) {
                 const myChar = characters.find(c => c.name === myCharName);
@@ -323,19 +335,38 @@
             }
         }
         
-        function populateGrid(gridElement, charList) {
-            gridElement.innerHTML = ''; // Clear existing grid
+        function populateAllGrids(charList) {
+            const vanguardGrid = document.getElementById('vanguard-grid');
+            const duelistGrid = document.getElementById('duelist-grid');
+            const strategistGrid = document.getElementById('strategist-grid');
+
+            vanguardGrid.innerHTML = '';
+            duelistGrid.innerHTML = '';
+            strategistGrid.innerHTML = '';
+
             charList.forEach(char => {
-                const card = document.createElement('div');
-                card.className = 'character-card bg-gray-700 rounded-lg p-2 text-center shadow-md';
-                card.dataset.charName = char.name;
-                card.innerHTML = `
-                    <img src="https://placehold.co/100x100/2d3748/e2e8f0?text=${char.name.split(' ').join('%0A')}" alt="${char.name}" class="w-full h-auto rounded-md mx-auto pointer-events-none">
-                    <p class="mt-2 text-sm font-semibold truncate pointer-events-none">${char.name}</p>
-                `;
-                card.onclick = () => handleCardClick(char, card);
-                gridElement.appendChild(card);
+                if (!char) return; // Safeguard for any missing characters
+                const card = createCharacterCard(char);
+                if (char.role === 'Vanguard') {
+                    vanguardGrid.appendChild(card);
+                } else if (char.role === 'Duelist') {
+                    duelistGrid.appendChild(card);
+                } else if (char.role === 'Strategist') {
+                    strategistGrid.appendChild(card);
+                }
             });
+        }
+
+        function createCharacterCard(char) {
+            const card = document.createElement('div');
+            card.className = 'character-card bg-gray-700 rounded-lg p-2 text-center shadow-md';
+            card.dataset.charName = char.name;
+            card.innerHTML = `
+                <img src="https://placehold.co/100x100/1f2937/fef2f2?text=${encodeURIComponent(char.name.replace(' ','\n'))}" alt="${char.name}" class="w-full h-auto rounded-md mx-auto pointer-events-none">
+                <p class="mt-2 text-xs font-semibold truncate pointer-events-none">${char.name}</p>
+            `;
+            card.onclick = () => handleCardClick(char, card);
+            return card;
         }
 
         function displayMysteryCard(elementId, character) {
@@ -372,7 +403,6 @@
                 updateData['player2.mysteryCharacter'] = character.name;
             }
 
-            // If both players have now chosen, start the game
             const opponentChar = playerNumber === 1 ? localGameState.player2.mysteryCharacter : localGameState.player1.mysteryCharacter;
             if (opponentChar) {
                 updateData.gameState = 'gameplay';
@@ -382,7 +412,7 @@
         }
 
         async function handleGuess() {
-            const { gameState, currentPlayer, player1, player2 } = localGameState;
+            const { gameState, currentPlayer } = localGameState;
             if (gameState !== 'gameplay' || currentPlayer !== playerNumber) {
                 showModal("Not Your Turn", "It's not your turn to guess.");
                 return;
@@ -395,7 +425,7 @@
                 return;
             }
 
-            const opponentCharName = (playerNumber === 1) ? player2.mysteryCharacter : player1.mysteryCharacter;
+            const opponentCharName = (playerNumber === 1) ? localGameState.player2.mysteryCharacter : localGameState.player1.mysteryCharacter;
             const gameRef = getGameRef(gameId);
 
             if (guess === opponentCharName.toLowerCase()) {
@@ -411,7 +441,6 @@
 
         // --- UTILITIES ---
         function getGameRef(id) {
-            // This is the corrected, simplified path
             return doc(db, "guess-who-games", id);
         }
 
@@ -431,14 +460,14 @@
             modal.classList.remove('hidden');
             modalTitle.textContent = title;
             modalText.textContent = text;
-            modalButtons.innerHTML = ''; // Clear previous buttons
+            modalButtons.innerHTML = '';
 
             const okButton = document.createElement('button');
             okButton.textContent = 'OK';
-            okButton.className = 'bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-8 rounded-lg';
+            okButton.className = 'bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-8 rounded-lg';
             okButton.onclick = () => {
                 modal.classList.add('hidden');
-                if (isError) { // If it's a fatal error, reset to start screen
+                if (isError) {
                     gameContainer.classList.add('hidden');
                     startScreen.classList.remove('hidden');
                     if(gameUnsubscribe) gameUnsubscribe();
