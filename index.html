@@ -241,6 +241,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { firebaseConfig } from "./firebase-config.js";
 
         // --- CHARACTER DATA WITH IMAGES ---
         const characterImages = {
@@ -333,16 +334,6 @@
 
         // --- INITIALIZATION ---
         async function initialize() {
-            const firebaseConfig = {
-                apiKey: "AIzaSyA3vaJjSDTQyEquEhWNaTlohdz9kZjjbeE",
-                authDomain: "marvelrivalsgame-65cb4.firebaseapp.com",
-                projectId: "marvelrivalsgame-65cb4",
-                storageBucket: "marvelrivalsgame-65cb4.firebasestorage.app",
-                messagingSenderId: "120750810065",
-                appId: "1:120750810065:web:2cea63a26b1079fb7576f0",
-                measurementId: "G-V00GNPDWPJ"
-            };
-
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
