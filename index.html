@@ -106,7 +106,7 @@
         
         // --- FIREBASE IMPORTS ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- CHARACTER DATA ---
@@ -398,7 +398,8 @@
 
         // --- UTILITIES ---
         function getGameRef(id) {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            // This is the corrected line:
+            const appId = 'marvel-guess-who'; 
             return doc(db, `artifacts/${appId}/public/data/guess-who-games`, id);
         }
 
