@@ -174,7 +174,6 @@
             auth = getAuth(app);
 
             try {
-                // Since you're not in the special environment, always sign in anonymously.
                 await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication failed:", error);
@@ -211,7 +210,7 @@
         }
 
         async function joinGame() {
-            const gameIdToJoin = document.getElementById('gameIdInput').value.trim();
+            const gameIdToJoin = document.getElementById('gameIdInput').value.trim().toUpperCase();
             if (!gameIdToJoin) {
                 showModal("Input Required", "Please enter a Game ID.");
                 return;
@@ -398,9 +397,8 @@
 
         // --- UTILITIES ---
         function getGameRef(id) {
-            // This is the corrected line:
-            const appId = 'marvel-guess-who'; 
-            return doc(db, `artifacts/${appId}/public/data/guess-who-games`, id);
+            // This is the corrected, simplified path
+            return doc(db, "guess-who-games", id);
         }
 
         function generateGameId() {
