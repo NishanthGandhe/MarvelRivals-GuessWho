@@ -117,6 +117,7 @@
             cursor: pointer;
             border: 2px solid #dce1f4e8; /* White-ish border */
             background-color: rgba(0, 0, 0, 0.6);
+            min-height: 120px; /* Ensure consistent card height */
         }
         .character-card:hover {
             transform: scale(1.05);
@@ -241,19 +242,64 @@
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- CHARACTER DATA ---
+        // --- CHARACTER DATA WITH IMAGES ---
+        const characterImages = {
+            'Adam Warlock': 'https://static.wikia.nocookie.net/marvel-rivals/images/7/7e/Adam_Warlock_Default_Costume_LoC_Icon.png',
+            'Black Panther': 'https://static.wikia.nocookie.net/marvel-rivals/images/4/48/Black_Panther_Default_Costume_LoC_Icon.png',
+            'Black Widow': 'https://static.wikia.nocookie.net/marvel-rivals/images/4/4f/Black_Widow_Default_Costume_LoC_Icon.png',
+            'Blade': 'https://static.wikia.nocookie.net/marvel-rivals/images/a/a2/Blade_Default_Costume_LoC_Icon.png',
+            'Hulk': 'https://static.wikia.nocookie.net/marvel-rivals/images/7/73/Bruce_Banner_Default_Costume_LoC_Icon.png',
+            'Captain America': 'https://static.wikia.nocookie.net/marvel-rivals/images/5/5f/Captain_America_Default_Costume_LoC_Icon.png',
+            'Cloak and Dagger': 'https://static.wikia.nocookie.net/marvel-rivals/images/1/15/Cloak_%26_Dagger_Default_Costume_LoC_Icon.png',
+            'Doctor Strange': 'https://static.wikia.nocookie.net/marvel-rivals/images/0/07/Doctor_Strange_Default_Costume_LoC_Icon.png',
+            'Emma Frost': 'https://static.wikia.nocookie.net/marvel-rivals/images/9/9b/Emma_Frost_Default_Costume_LoC_Icon.png',
+            'Groot': 'https://static.wikia.nocookie.net/marvel-rivals/images/0/0a/Groot_Default_Costume_LoC_Icon.png',
+            'Hawkeye': 'https://static.wikia.nocookie.net/marvel-rivals/images/c/c7/Hawkeye_Default_Costume_LoC_Icon.png',
+            'Hela': 'https://static.wikia.nocookie.net/marvel-rivals/images/d/d1/Hela_Default_Costume_LoC_Icon.png',
+            'Human Torch': 'https://static.wikia.nocookie.net/marvel-rivals/images/7/7a/Human_Torch_Default_Costume_LoC_Icon.png',
+            'Invisible Woman': 'https://static.wikia.nocookie.net/marvel-rivals/images/3/3a/Invisible_Woman_Default_Costume_LoC_Icon.png',
+            'Iron Fist': 'https://static.wikia.nocookie.net/marvel-rivals/images/9/9c/Iron_Fist_Default_Costume_LoC_Icon.png',
+            'Iron Man': 'https://static.wikia.nocookie.net/marvel-rivals/images/c/c2/Iron_Man_Default_Costume_LoC_Icon.png',
+            'Jeff the Land Shark': 'https://static.wikia.nocookie.net/marvel-rivals/images/1/13/Jeff_the_Land_Shark_Default_Costume_LoC_Icon.png',
+            'Loki': 'https://static.wikia.nocookie.net/marvel-rivals/images/7/75/Loki_Default_Costume_LoC_Icon.png',
+            'Luna Snow': 'https://static.wikia.nocookie.net/marvel-rivals/images/c/c9/Luna_Snow_Default_Costume_LoC_Icon.png',
+            'Magik': 'https://static.wikia.nocookie.net/marvel-rivals/images/d/dd/Magik_Default_Costume_LoC_Icon.png',
+            'Magneto': 'https://static.wikia.nocookie.net/marvel-rivals/images/d/d2/Magneto_Default_Costume_LoC_Icon.png',
+            'Mantis': 'https://static.wikia.nocookie.net/marvel-rivals/images/3/3d/Mantis_Default_Costume_LoC_Icon.png',
+            'Mister Fantastic': 'https://static.wikia.nocookie.net/marvel-rivals/images/4/40/Mister_Fantastic_Default_Costume_LoC_Icon.png',
+            'Moon Knight': 'https://static.wikia.nocookie.net/marvel-rivals/images/f/ff/Moon_Knight_Default_Costume_LoC_Icon.png',
+            'Namor': 'https://static.wikia.nocookie.net/marvel-rivals/images/7/7d/Namor_Default_Costume_LoC_Icon.png',
+            'Peni Parker': 'https://static.wikia.nocookie.net/marvel-rivals/images/1/15/Peni_Parker_Default_Costume_LoC_Icon.png',
+            'Phoenix': 'https://static.wikia.nocookie.net/marvel-rivals/images/d/de/Phoenix_Default_Costume_LoC_Icon.png',
+            'Psylocke': 'https://static.wikia.nocookie.net/marvel-rivals/images/6/63/Psylocke_Default_Costume_LoC_Icon.png',
+            'The Punisher': 'https://static.wikia.nocookie.net/marvel-rivals/images/1/15/The_Punisher_Default_Costume_LoC_Icon.png',
+            'Rocket Raccoon': 'https://static.wikia.nocookie.net/marvel-rivals/images/d/d0/Rocket_Raccoon_Default_Costume_LoC_Icon.png',
+            'Scarlet Witch': 'https://static.wikia.nocookie.net/marvel-rivals/images/e/ef/Scarlet_Witch_Default_Costume_LoC_Icon.png',
+            'Spider-Man': 'https://static.wikia.nocookie.net/marvel-rivals/images/7/7a/Spider-Man_Default_Costume_LoC_Icon.png',
+            'Squirrel Girl': 'https://static.wikia.nocookie.net/marvel-rivals/images/9/90/Squirrel_Girl_Default_Costume_LoC_Icon.png',
+            'Star-Lord': 'https://static.wikia.nocookie.net/marvel-rivals/images/f/f9/Star-Lord_Default_Costume_LoC_Icon.png',
+            'Storm': 'https://static.wikia.nocookie.net/marvel-rivals/images/1/16/Storm_Default_Costume_LoC_Icon.png',
+            'The Thing': 'https://static.wikia.nocookie.net/marvel-rivals/images/e/e1/The_Thing_Default_Costume_LoC_Icon.png',
+            'Thor': 'https://static.wikia.nocookie.net/marvel-rivals/images/0/02/Thor_Default_Costume_LoC_Icon.png',
+            'Ultron': 'https://static.wikia.nocookie.net/marvel-rivals/images/5/5e/Ultron_Default_Costume_LoC_Icon.png',
+            'Venom': 'https://static.wikia.nocookie.net/marvel-rivals/images/6/61/Venom_Default_Costume_LoC_Icon.png',
+            'Winter Soldier': 'https://static.wikia.nocookie.net/marvel-rivals/images/0/05/Winter_Soldier_Default_Costume_LoC_Icon.png',
+            'Wolverine': 'https://static.wikia.nocookie.net/marvel-rivals/images/f/f8/Wolverine_Default_Costume_LoC_Icon.png'
+        };
+
         const characters = [
             { name: 'Captain America', role: 'Vanguard' }, { name: 'Doctor Strange', role: 'Vanguard' }, { name: 'Emma Frost', role: 'Vanguard' },
             { name: 'Groot', role: 'Vanguard' }, { name: 'Hulk', role: 'Vanguard' }, { name: 'Magneto', role: 'Vanguard' },
             { name: 'Peni Parker', role: 'Vanguard' }, { name: 'The Thing', role: 'Vanguard' }, { name: 'Thor', role: 'Vanguard' },
             { name: 'Venom', role: 'Vanguard' },
-            { name: 'Black Panther', role: 'Duelist' }, { name: 'Black Widow', role: 'Duelist' }, { name: 'Hawkeye', role: 'Duelist' },
-            { name: 'Hela', role: 'Duelist' }, { name: 'Human Torch', role: 'Duelist' }, { name: 'Iron Fist', role: 'Duelist' },
-            { name: 'Iron Man', role: 'Duelist' }, { name: 'Magik', role: 'Duelist' }, { name: 'Mister Fantastic', role: 'Duelist' },
-            { name: 'Moon Knight', role: 'Duelist' }, { name: 'Namor', role: 'Duelist' }, { name: 'Phoenix', role: 'Duelist' },
-            { name: 'Psylocke', role: 'Duelist' }, { name: 'The Punisher', role: 'Duelist' }, { name: 'Scarlet Witch', role: 'Duelist' },
-            { name: 'Squirrel Girl', role: 'Duelist' }, { name: 'Spider-Man', role: 'Duelist' }, { name: 'Star-Lord', role: 'Duelist' },
-            { name: 'Storm', role: 'Duelist' }, { name: 'Winter Soldier', role: 'Duelist' }, { name: 'Wolverine', role: 'Duelist' },
+            { name: 'Black Panther', role: 'Duelist' }, { name: 'Black Widow', role: 'Duelist' }, { name: 'Blade', role: 'Duelist' },
+            { name: 'Hawkeye', role: 'Duelist' }, { name: 'Hela', role: 'Duelist' }, { name: 'Human Torch', role: 'Duelist' }, 
+            { name: 'Iron Fist', role: 'Duelist' }, { name: 'Iron Man', role: 'Duelist' }, { name: 'Magik', role: 'Duelist' }, 
+            { name: 'Mister Fantastic', role: 'Duelist' }, { name: 'Moon Knight', role: 'Duelist' }, { name: 'Namor', role: 'Duelist' }, 
+            { name: 'Phoenix', role: 'Duelist' }, { name: 'Psylocke', role: 'Duelist' }, { name: 'The Punisher', role: 'Duelist' }, 
+            { name: 'Scarlet Witch', role: 'Duelist' }, { name: 'Squirrel Girl', role: 'Duelist' }, { name: 'Spider-Man', role: 'Duelist' }, 
+            { name: 'Star-Lord', role: 'Duelist' }, { name: 'Storm', role: 'Duelist' }, { name: 'Winter Soldier', role: 'Duelist' }, 
+            { name: 'Wolverine', role: 'Duelist' },
             { name: 'Adam Warlock', role: 'Strategist' }, { name: 'Cloak and Dagger', role: 'Strategist' }, { name: 'Invisible Woman', role: 'Strategist' },
             { name: 'Jeff the Land Shark', role: 'Strategist' }, { name: 'Loki', role: 'Strategist' }, { name: 'Luna Snow', role: 'Strategist' },
             { name: 'Mantis', role: 'Strategist' }, { name: 'Rocket Raccoon', role: 'Strategist' }, { name: 'Ultron', role: 'Strategist' }
@@ -485,10 +531,21 @@
 
         function createCharacterCard(char) {
             const card = document.createElement('div');
-            card.className = 'character-card rounded-lg p-2 text-center shadow-md flex items-center justify-center';
+            card.className = 'character-card bg-gray-700 rounded-lg p-2 text-center shadow-md';
             card.dataset.charName = char.name;
+            
+            // Get the real character image URL or fallback to placeholder
+            const primaryImageUrl = characterImages[char.name];
+            const proxiedImageUrl = primaryImageUrl ? `https://images.weserv.nl/?url=${encodeURIComponent(primaryImageUrl)}&w=100&h=100&fit=contain&trim=10` : null;
+            const fallbackImageUrl = `https://placehold.co/100x100/1f2937/fef2f2?text=${encodeURIComponent(char.name.replace(' ', '%0A'))}`;
+            
             card.innerHTML = `
-                <p class="text-xs font-semibold pointer-events-none leading-tight">${char.name}</p>
+                <img src="${proxiedImageUrl || fallbackImageUrl}" 
+                     alt="${char.name}" 
+                     class="w-full h-auto rounded-md mx-auto pointer-events-none character-image" 
+                     style="max-height: 100px; object-fit: contain;"
+                     onerror="this.onerror=null; this.src='${fallbackImageUrl}'; console.log('Failed to load image for ${char.name}');">
+                <p class="mt-2 text-xs font-semibold truncate pointer-events-none">${char.name}</p>
             `;
             return card;
         }
