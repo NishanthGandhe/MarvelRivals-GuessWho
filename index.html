@@ -6,126 +6,220 @@
     <title>Marvel Rivals - Guess Who?</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Oswald:wght@400;600&display=swap" rel="stylesheet">
     <style>
+        /* --- FONT & IMAGE ASSETS --- */
+        @font-face {
+            font-family: 'MarvelFont';
+            src: url('./MarvelFont.otf') format('opentype');
+        }
+
         body {
-            font-family: 'Oswald', sans-serif;
-            background-color: #111827;
+            font-family: 'MarvelFont', sans-serif;
+            background-image: url('./default.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: #e2e8f0;
             font-weight: 400;
+            margin: 0;
         }
-        .font-bangers {
-            font-family: 'Bangers', cursive;
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: -1;
         }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .comic-title {
+            font-family: 'MarvelFont', sans-serif;
+            color: #fef2f2;
+            -webkit-text-stroke: 2px #ef4444;
+            text-shadow: 4px 4px 0 #000, 0 0 20px #ef4444;
+        }
+
+        .start-screen-box {
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 3.5px solid #dce1f4e8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .mode-link-box {
+            display: flex;
+            position: relative;
+            height: 80px;
+            width: 205px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border: none;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 18px;
+            font-family: 'MarvelFont', sans-serif;
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+            z-index: 1;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.9);
+            text-decoration: none;
+        }
+
+        .mode-link-box::before {
+            content: '';
+            position: absolute;
+            top: -22px;
+            left: -34px;
+            width: 260px;
+            height: 125px;
+            background-image: url('./skinnyborder.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            pointer-events: none;
+            transition: background-image 0.2s ease-in-out;
+        }
+
+        .mode-link-box:hover {
+            transform: scale(1.02);
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .mode-link-box:hover::before {
+            background-image: url('./border.png');
+        }
+
+        .player-board {
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 3.5px solid #dce1f4e8;
+        }
+
+        .player-board.active {
+            border-color: #facc15;
+        }
+        .player-board.active-p2 {
+             border-color: #f87171;
+        }
+        
         .character-card {
             transition: transform 0.3s, filter 0.3s, opacity 0.3s, border-color 0.3s;
             cursor: pointer;
-            border: 2px solid #4b5563;
+            border: 2px solid #dce1f4e8; /* White-ish border */
+            background-color: rgba(0, 0, 0, 0.6);
         }
         .character-card:hover {
             transform: scale(1.05);
-            border-color: #facc15;
+            border-color: #facc15; /* Yellow border on hover */
         }
         .character-card.flipped {
             transform: scale(0.9);
             filter: grayscale(100%);
             opacity: 0.4;
         }
-        .mystery-card { border: 2px dashed #4b5563; }
-        .comic-title {
-            color: #fef2f2;
-            -webkit-text-stroke: 2px #ef4444;
-            text-shadow: 4px 4px 0 #000;
+        .mystery-card { 
+            border: 2px dashed #4b5563;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 3.5px solid #dce1f4e8;
         }
-        .player-board.active {
-            border-color: #facc15; /* Yellow-400 */
-        }
-        .player-board.active-p2 {
-             border-color: #f87171; /* Red-400 */
-        }
+
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0,0,0,0.8); display: flex;
             justify-content: center; align-items: center; z-index: 100;
         }
         .modal-content {
-            background-color: #1f2937; padding: 2rem; border-radius: 0.75rem;
-            text-align: center; border: 1px solid #4b5563; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 2rem; border-radius: 0.75rem;
+            text-align: center; border: 3.5px solid #dce1f4e8;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
+        
         #game-container.hidden, #start-screen.hidden, .modal-backdrop.hidden, .view-container.hidden { display: none; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body>
+    <div class="overlay"></div>
 
-    <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-8">
-            <h1 class="text-6xl md:text-7xl font-bangers tracking-wider comic-title">Marvel Rivals: Guess Who?</h1>
-            <p id="instructions" class="text-gray-400 mt-2 text-lg">Create or join a game to start playing!</p>
-        </div>
-
-        <!-- Start Screen -->
-        <div id="start-screen" class="bg-gray-800 p-6 rounded-xl shadow-2xl border border-gray-700 text-center max-w-lg mx-auto">
-            <button id="createGameBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 text-lg rounded-lg shadow-lg transition-transform transform hover:scale-105">Create New Game</button>
-            <div class="my-6 text-gray-400">OR</div>
-            <div>
-                <input type="text" id="gameIdInput" placeholder="Enter Game ID to Join" class="w-full max-w-xs bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                <button id="joinGameBtn" class="ml-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">Join Game</button>
+    <div class="main-content">
+        <div class="max-w-7xl mx-auto flex flex-col items-center justify-center min-h-full">
+            <div class="text-center mb-8">
+                <h1 class="text-6xl md:text-7xl font-bangers tracking-wider comic-title">Marvel Rivals: Guess Who?</h1>
+                <p id="instructions" class="text-gray-300 mt-2 text-lg font-marvel">Create or join a game to start playing!</p>
             </div>
-        </div>
 
-        <!-- Game Container -->
-        <div id="game-container" class="hidden">
-            <div class="text-center mb-4">
-                <p class="text-gray-400">Game ID: <strong id="gameIdDisplay" class="text-yellow-400 cursor-pointer" title="Click to copy"></strong></p>
-                <p id="player-identity" class="font-bold text-xl"></p>
-            </div>
-            <div id="gameStatus" class="text-center text-3xl font-bangers tracking-wide mb-6 h-10"></div>
-            
-            <div id="player-board" class="player-board bg-gray-800 p-6 rounded-xl shadow-2xl border-4 border-transparent transition-colors duration-500">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 id="board-title" class="text-3xl font-bold">Your Board</h2>
-                    <button id="toggleViewBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Toggle View</button>
+            <!-- Start Screen -->
+            <div id="start-screen" class="p-6 rounded-xl shadow-2xl text-center max-w-lg mx-auto start-screen-box flex flex-col items-center space-y-4">
+                <a href="#" id="createGameBtn" class="mode-link-box">Create New Game</a>
+                <div class="text-gray-400 font-marvel">OR</div>
+                <div class="flex flex-col items-center space-y-4">
+                    <input type="text" id="gameIdInput" placeholder="Enter Game ID to Join" class="w-full max-w-xs bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 font-marvel text-center">
+                    <a href="#" id="joinGameBtn" class="mode-link-box">Join Game</a>
                 </div>
+            </div>
+
+            <!-- Game Container -->
+            <div id="game-container" class="hidden w-full">
+                <div class="text-center mb-4 font-marvel">
+                    <p class="text-gray-300">Game ID: <strong id="gameIdDisplay" class="text-yellow-400 cursor-pointer" title="Click to copy"></strong></p>
+                    <p id="player-identity" class="font-bold text-xl"></p>
+                </div>
+                <div id="gameStatus" class="text-center text-3xl font-bangers tracking-wide mb-6 h-10"></div>
                 
-                <!-- Role View Container -->
-                <div id="role-view" class="view-container">
-                    <div>
-                        <h3 class="text-2xl font-bangers text-yellow-400 tracking-wider mb-2">Vanguards</h3>
-                        <div id="vanguard-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                <div id="player-board" class="player-board p-6 rounded-xl shadow-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 id="board-title" class="text-3xl font-bold font-marvel">Your Board</h2>
+                        <button id="toggleViewBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg font-marvel">Toggle View</button>
                     </div>
-                    <div class="mt-6">
-                        <h3 class="text-2xl font-bangers text-red-400 tracking-wider mb-2">Duelists</h3>
-                        <div id="duelist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
-                    </div>
-                    <div class="mt-6">
-                        <h3 class="text-2xl font-bangers text-sky-400 tracking-wider mb-2">Strategists</h3>
-                        <div id="strategist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
-                    </div>
-                </div>
-
-                <!-- Alphabetical View Container -->
-                <div id="alpha-view" class="view-container hidden">
-                    <div id="alpha-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t-2 border-gray-700">
-                    <div>
-                        <h3 class="text-xl font-semibold text-center">Your Mystery Character</h3>
-                        <div id="player-mystery-card" class="mystery-card bg-gray-900 rounded-lg p-4 mt-2 flex items-center justify-center h-28"></div>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-center">Opponent's Character</h3>
-                        <div id="opponent-mystery-card" class="mystery-card bg-gray-900 rounded-lg p-4 mt-2 flex items-center justify-center h-28">
-                            <span class="text-gray-500 text-2xl">?</span>
+                    
+                    <!-- Role View Container -->
+                    <div id="role-view" class="view-container">
+                        <div>
+                            <h3 class="text-2xl font-bangers text-yellow-400 tracking-wider mb-2">Vanguards</h3>
+                            <div id="vanguard-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-2xl font-bangers text-red-400 tracking-wider mb-2">Duelists</h3>
+                            <div id="duelist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-2xl font-bangers text-sky-400 tracking-wider mb-2">Strategists</h3>
+                            <div id="strategist-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
                         </div>
                     </div>
-                </div>
-                <div id="guess-area" class="mt-6 text-center hidden">
-                    <h3 class="text-xl font-semibold">Guess Opponent's Character:</h3>
-                    <input type="text" id="guess-input" placeholder="Type name..." class="mt-2 w-full max-w-xs bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
-                    <button id="guess-btn" class="ml-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105">Guess</button>
+
+                    <!-- Alphabetical View Container -->
+                    <div id="alpha-view" class="view-container hidden">
+                        <div id="alpha-grid" class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-8 lg:grid-cols-10 gap-4"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 pt-6 border-t-2 border-gray-700">
+                        <div>
+                            <h3 class="text-xl font-semibold text-center font-marvel">Your Mystery Character</h3>
+                            <div id="player-mystery-card" class="mystery-card rounded-lg p-4 mt-2 flex items-center justify-center h-28"></div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-center font-marvel">Opponent's Character</h3>
+                            <div id="opponent-mystery-card" class="mystery-card rounded-lg p-4 mt-2 flex items-center justify-center h-28">
+                                <span class="text-gray-500 text-2xl">?</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="guess-area" class="mt-6 text-center hidden">
+                        <h3 class="text-xl font-semibold font-marvel">Guess Opponent's Character:</h3>
+                        <input type="text" id="guess-input" placeholder="Type name..." class="mt-2 w-full max-w-xs bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 font-marvel">
+                        <button id="guess-btn" class="ml-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-transform transform hover:scale-105 font-marvel">Guess</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -214,8 +308,8 @@
                 showModal("Authentication Error", "Could not sign in. Please refresh the page.");
             }
 
-            document.getElementById('createGameBtn').onclick = createNewGame;
-            document.getElementById('joinGameBtn').onclick = joinGame;
+            document.getElementById('createGameBtn').onclick = (e) => { e.preventDefault(); createNewGame(); };
+            document.getElementById('joinGameBtn').onclick = (e) => { e.preventDefault(); joinGame(); };
             document.getElementById('gameIdDisplay').onclick = copyGameId;
             toggleViewBtn.onclick = toggleCharacterView;
         }
@@ -312,7 +406,6 @@
 
             updateUIFromState();
 
-            // Trigger end game modal only when state changes to 'gameover'
             if (oldGameState !== 'gameover' && localGameState.gameState === 'gameover') {
                 showEndGameModal();
             }
@@ -364,31 +457,39 @@
             strategistGrid.innerHTML = '';
             alphaGrid.innerHTML = '';
 
-            // Populate role-based grids
             charList.forEach(char => {
                 if (!char) return;
                 const card = createCharacterCard(char);
-                if (char.role === 'Vanguard') vanguardGrid.appendChild(card);
-                else if (char.role === 'Duelist') duelistGrid.appendChild(card);
-                else if (char.role === 'Strategist') strategistGrid.appendChild(card);
+                if (char.role === 'Vanguard') vanguardGrid.appendChild(card.cloneNode(true));
+                else if (char.role === 'Duelist') duelistGrid.appendChild(card.cloneNode(true));
+                else if (char.role === 'Strategist') strategistGrid.appendChild(card.cloneNode(true));
+            });
+            
+            document.querySelectorAll('#role-view .character-card').forEach(card => {
+                const charName = card.dataset.charName;
+                const char = characters.find(c => c.name === charName);
+                card.onclick = () => handleCardClick(char, card);
             });
 
-            // Populate alphabetical grid
             [...charList].sort((a, b) => a.name.localeCompare(b.name)).forEach(char => {
                  if (!char) return;
                  alphaGrid.appendChild(createCharacterCard(char));
+            });
+
+            document.querySelectorAll('#alpha-view .character-card').forEach(card => {
+                const charName = card.dataset.charName;
+                const char = characters.find(c => c.name === charName);
+                card.onclick = () => handleCardClick(char, card);
             });
         }
 
         function createCharacterCard(char) {
             const card = document.createElement('div');
-            card.className = 'character-card bg-gray-700 rounded-lg p-2 text-center shadow-md';
+            card.className = 'character-card rounded-lg p-2 text-center shadow-md flex items-center justify-center';
             card.dataset.charName = char.name;
             card.innerHTML = `
-                <img src="https://placehold.co/100x100/1f2937/fef2f2?text=${encodeURIComponent(char.name.replace(' ','\n'))}" alt="${char.name}" class="w-full h-auto rounded-md mx-auto pointer-events-none">
-                <p class="mt-2 text-xs font-semibold truncate pointer-events-none">${char.name}</p>
+                <p class="text-xs font-semibold pointer-events-none leading-tight">${char.name}</p>
             `;
-            card.onclick = () => handleCardClick(char, card);
             return card;
         }
 
@@ -424,7 +525,6 @@
                 }
                 showConfirmationModal(character);
             } else if (localGameState.gameState === 'gameplay') {
-                // Flip all cards with the same name in both views
                 const allCards = document.querySelectorAll(`.character-card[data-char-name="${character.name}"]`);
                 allCards.forEach(card => card.classList.toggle('flipped'));
             }
@@ -455,7 +555,7 @@
             }
 
             const guessInput = document.getElementById('guess-input');
-            const guess = guessInput.value.trim().toLowerCase();
+            const guess = guessInput.value.trim();
             if (!guess) {
                 showModal("Input Required", "Please enter a character's name.");
                 return;
@@ -464,7 +564,23 @@
             const opponentCharName = (playerNumber === 1) ? localGameState.player2.mysteryCharacter : localGameState.player1.mysteryCharacter;
             const gameRef = getGameRef(gameId);
 
-            if (guess === opponentCharName.toLowerCase()) {
+            // Find the closest matching character
+            const matchedCharacter = findClosestCharacterMatch(guess);
+            
+            if (!matchedCharacter) {
+                showModal("Character Not Found", `"${guess}" is not a valid Marvel Rivals character. Please check the spelling and try again.`);
+                return;
+            }
+
+            // If the matched character is different from what was typed, confirm with user
+            if (matchedCharacter.name.toLowerCase() !== guess.toLowerCase()) {
+                showSpellCheckModal(matchedCharacter, opponentCharName, gameRef);
+                guessInput.value = '';
+                return;
+            }
+
+            // Process the guess
+            if (matchedCharacter.name === opponentCharName) {
                 await updateDoc(gameRef, { gameState: 'gameover', winner: playerNumber });
             } else {
                 showModal("Incorrect Guess!", "That was not the correct character. Your turn is over.");
@@ -483,6 +599,75 @@
         function generateGameId() {
             return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
+
+        // Spell check function to find closest character match
+        function findClosestCharacterMatch(guess) {
+            const normalizedGuess = guess.toLowerCase().trim();
+            
+            // First, check for exact match
+            const exactMatch = characters.find(char => char.name.toLowerCase() === normalizedGuess);
+            if (exactMatch) return exactMatch;
+            
+            // Check for partial matches (contains or is contained)
+            const partialMatch = characters.find(char => {
+                const charName = char.name.toLowerCase();
+                return charName.includes(normalizedGuess) || normalizedGuess.includes(charName);
+            });
+            if (partialMatch) return partialMatch;
+            
+            // Check for matches ignoring common variations
+            const cleanGuess = normalizedGuess.replace(/[^a-z0-9]/g, '');
+            const cleanMatch = characters.find(char => {
+                const cleanCharName = char.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                return cleanCharName === cleanGuess;
+            });
+            if (cleanMatch) return cleanMatch;
+            
+            // Check for simple misspellings using Levenshtein distance
+            let bestMatch = null;
+            let bestDistance = Infinity;
+            
+            characters.forEach(char => {
+                const distance = levenshteinDistance(normalizedGuess, char.name.toLowerCase());
+                const maxAllowedDistance = Math.max(1, Math.floor(char.name.length * 0.3)); // Allow 30% error
+                
+                if (distance <= maxAllowedDistance && distance < bestDistance) {
+                    bestDistance = distance;
+                    bestMatch = char;
+                }
+            });
+            
+            return bestMatch;
+        }
+
+        // Simple Levenshtein distance calculation
+        function levenshteinDistance(str1, str2) {
+            const matrix = [];
+            
+            for (let i = 0; i <= str2.length; i++) {
+                matrix[i] = [i];
+            }
+            
+            for (let j = 0; j <= str1.length; j++) {
+                matrix[0][j] = j;
+            }
+            
+            for (let i = 1; i <= str2.length; i++) {
+                for (let j = 1; j <= str1.length; j++) {
+                    if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1, // substitution
+                            matrix[i][j - 1] + 1,     // insertion
+                            matrix[i - 1][j] + 1      // deletion
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
         
         function copyGameId() {
             navigator.clipboard.writeText(gameId).then(() => {
@@ -495,6 +680,7 @@
         function showModal(title, text) {
             modal.classList.remove('hidden');
             modalTitle.textContent = title;
+            modalTitle.className = "text-2xl font-bold mb-4";
             modalText.textContent = text;
             modalButtons.innerHTML = '';
 
@@ -529,7 +715,7 @@
 
             const playAgainButton = document.createElement('button');
             playAgainButton.textContent = 'Play Again';
-            playAgainButton.className = 'bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-8 rounded-lg';
+            playAgainButton.className = 'mode-link-box';
             playAgainButton.onclick = () => window.location.reload();
             
             modalButtons.appendChild(playAgainButton);
@@ -555,6 +741,41 @@
             noButton.textContent = 'No';
             noButton.className = 'bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg';
             noButton.onclick = () => modal.classList.add('hidden');
+
+            modalButtons.appendChild(yesButton);
+            modalButtons.appendChild(noButton);
+        }
+
+        async function showSpellCheckModal(matchedCharacter, opponentCharName, gameRef) {
+            modal.classList.remove('hidden');
+            modalTitle.textContent = "Did you mean...?";
+            modalTitle.className = "text-2xl font-bold mb-4";
+            modalText.textContent = `Did you mean "${matchedCharacter.name}"?`;
+            modalButtons.innerHTML = '';
+            
+            const yesButton = document.createElement('button');
+            yesButton.textContent = 'Yes, guess that';
+            yesButton.className = 'bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg';
+            yesButton.onclick = async () => {
+                modal.classList.add('hidden');
+                
+                // Process the corrected guess
+                if (matchedCharacter.name === opponentCharName) {
+                    await updateDoc(gameRef, { gameState: 'gameover', winner: playerNumber });
+                } else {
+                    showModal("Incorrect Guess!", "That was not the correct character. Your turn is over.");
+                    await updateDoc(gameRef, { currentPlayer: playerNumber === 1 ? 2 : 1 });
+                }
+            };
+
+            const noButton = document.createElement('button');
+            noButton.textContent = 'No, try again';
+            noButton.className = 'bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg';
+            noButton.onclick = () => {
+                modal.classList.add('hidden');
+                // Focus back on the input for the user to try again
+                document.getElementById('guess-input').focus();
+            };
 
             modalButtons.appendChild(yesButton);
             modalButtons.appendChild(noButton);
