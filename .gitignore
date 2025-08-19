@@ -1,5 +1,6 @@
 # Firebase Configuration
 firebase-config.js
+# Keep the template file: firebase-config.template.js
 
 # OS Files
 .DS_Store
