@@ -103,6 +103,7 @@
     </div>
 
     <script type="module">
+        
         // --- FIREBASE IMPORTS ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -157,26 +158,24 @@
 
         // --- INITIALIZATION ---
         async function initialize() {
-            // These are special variables provided by the environment.
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            const firebaseConfig = {
+                apiKey: "AIzaSyA3vaJjSDTQyEquEhWNaTlohdz9kZjjbeE",
+                authDomain: "marvelrivalsgame-65cb4.firebaseapp.com",
+                projectId: "marvelrivalsgame-65cb4",
+                storageBucket: "marvelrivalsgame-65cb4.firebasestorage.app",
+                messagingSenderId: "120750810065",
+                appId: "1:120750810065:web:2cea63a26b1079fb7576f0",
+                measurementId: "G-V00GNPDWPJ"
+            };
 
-            if (!firebaseConfig.apiKey) {
-                showModal("Error", "Firebase configuration is missing. The game cannot connect to the server.");
-                return;
-            }
-
+            // Initialize Firebase
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
 
             try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Since you're not in the special environment, always sign in anonymously.
+                await signInAnonymously(auth);
             } catch (error) {
                 console.error("Authentication failed:", error);
                 showModal("Authentication Error", "Could not sign in. Please refresh the page.");
